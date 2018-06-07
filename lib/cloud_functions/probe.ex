@@ -1,4 +1,4 @@
-defmodule Cloudfunctions do
+defmodule CloudFunctions.Probe do
   require Logger
 
   defmodule Client do
@@ -138,7 +138,8 @@ defmodule Cloudfunctions do
                 {:google, [memory:  256, case: 2], "https://us-central1-serverless-research-199315.cloudfunctions.net/transfer-256"},
                 {:google, [memory:  512, case: 2], "https://us-central1-serverless-research-199315.cloudfunctions.net/transfer-512"},
                 {:google, [memory: 1024, case: 2], "https://us-central1-serverless-research-199315.cloudfunctions.net/transfer-1024"},
-                {:google, [memory: 2048, case: 2], "https://us-central1-serverless-research-199315.cloudfunctions.net/transfer-2048"}
+                {:google, [memory: 2048, case: 2], "https://us-central1-serverless-research-199315.cloudfunctions.net/transfer-2048"},
+                {:azure,  [case: 2              ], "https://serverless-research-azure.azurewebsites.net/api/transfer"}
                 ]
     backends
     |> Enum.map(fn {provider, tags, url} ->
@@ -155,7 +156,7 @@ defmodule Cloudfunctions do
           end)
 
           {time, result} = :timer.tc(fn ->
-            Client.post(url, %{"fileName" => "64MB.dat", "contentLength" => 67108864}, opts: [timeout: 120_000_000, connect_timeout: 30_000_000, recv_timeout: 120_000_000])
+            Client.post(url, %{"fileName" => "32MB.dat", "size" => 32}, opts: [timeout: 120_000_000, connect_timeout: 30_000_000, recv_timeout: 120_000_000])
           end)
 
           time_s = time / 1_000_000

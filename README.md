@@ -1,4 +1,4 @@
-# Cloudfunctions
+# CloudFunctions
 
 Probe is ready to be run in docker. Uses `elixir:1.4` image as runtime.
 

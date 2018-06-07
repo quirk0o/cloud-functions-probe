@@ -1,22 +1,28 @@
-defmodule Cloudfunctions.Mixfile do
+defmodule CloudFunctions.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :cloudfunctions,
-     version: "0.0.1",
-     elixir: "~> 1.4",
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
-     deps: deps,
-     escript: [main_module: Cloudfunctions],  # <- add this line
-   ]
+    [
+      app: :cloud_functions,
+      version: "0.0.1",
+      elixir: "~> 1.4",
+      build_embedded: Mix.env == :prod,
+      start_permanent: Mix.env == :prod,
+      deps: deps,
+      escript: [
+        main_module: CloudFunctions.Probe
+      ]
+    ]
   end
 
   # Configuration for the OTP application
   #
   # Type `mix help compile.app` for more information
   def application do
-    [applications: [:logger, :poison, :hackney]]
+    [
+      applications: [:logger, :poison, :hackney],
+      mod: {CloudFunctions.Application, []}
+    ]
   end
 
   # Dependencies can be Hex packages:
@@ -29,8 +35,10 @@ defmodule Cloudfunctions.Mixfile do
   #
   # Type `mix help deps` for more examples and options
   defp deps do
-    [{:tesla, "~> 0.7.0"},
-     {:poison, ">= 1.0.0"},
-     {:hackney, "~> 1.8"}] # for JSON middleware
+    [
+      {:tesla, "~> 0.7.0"},
+      {:poison, ">= 1.0.0"},
+      {:hackney, "~> 1.8"}
+    ] # for JSON middleware
   end
 end
