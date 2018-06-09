@@ -14,8 +14,8 @@ defmodule CloudFunctions.Scheduler do
   end
 
   def handle_info(:work, state) do
-    CloudFunctions.Probe.main([])
     schedule_work()
+    CloudFunctions.Probe.main([])
     {:noreply, state}
   end
 
