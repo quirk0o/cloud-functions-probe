@@ -9,17 +9,25 @@ defmodule CloudFunctions.Scheduler do
   end
 
   def init(state) do
-    schedule_work()
+    run()
     {:ok, state}
   end
 
   def handle_info(:work, state) do
-    schedule_work()
-    CloudFunctions.Probe.main([])
+    run()
     {:noreply, state}
+  end
+
+  defp run do
+    schedule_work()
+    do_work()
   end
 
   defp schedule_work() do
     Process.send_after(self(), :work, @interval)
+  end
+
+  defp do_work do
+    CloudFunctions.Probe.main([])
   end
 end
