@@ -157,7 +157,7 @@ defmodule CloudFunctions.Probe do
           end)
 
           {time, result} = :timer.tc(fn ->
-            Client.post(url, %{"fileName" => "32MB.dat", "size" => 32}, opts: [timeout: 120_000_000, connect_timeout: 30_000_000, recv_timeout: 120_000_000])
+            Client.post(url, %{"fileName" => "32MB.dat", "size" => "32MB"}, opts: [timeout: 120_000_000, connect_timeout: 30_000_000, recv_timeout: 120_000_000])
           end)
 
           time_s = time / 1_000_000
