@@ -443,7 +443,7 @@ defmodule CloudFunctions.Probe do
                                      end
                                    )
                                 |> Enum.join(",")
-                   ~s|transfer,#{tags_str} #{values_str}|
+                   ~s|transfer_size,#{tags_str} #{values_str}|
                    |> InfluxClient.write()
                  else
                    Logger.warn("Invalid response: #{result.body}")
