@@ -412,12 +412,8 @@ defmodule CloudFunctions.Probe do
                  if is_map(result.body) do
                    tags_str = tags
                               |> Keyword.put(:provider, provider)
-                              |> Enum.reject(fn {k, v} -> is_nil(v) end)
                               |> Enum.map(
-                                   fn
-                                     {k, v} when is_binary(v) -> "#{k}=\"#{v}\""
-                                     {k, v} -> "#{k}=#{v}"
-                                   end
+                                   fn {k, v} -> "#{k}=#{v}" end
                                  )
                               |> Enum.join(",")
                    time_download = case get_in(result.body, ["time", "download"]) do
