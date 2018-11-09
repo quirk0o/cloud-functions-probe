@@ -242,7 +242,13 @@ defmodule CloudFunctions.Probe do
         [memory: 2048, case: 2],
         "https://us-central1-serverless-research-199315.cloudfunctions.net/transfer-2048"
       },
-      {:azure, [case: 2], "https://serverless-research-azure.azurewebsites.net/api/transfer"}
+      {:azure, [case: 2], "https://serverless-research-azure.azurewebsites.net/api/transfer"},
+      {:ibm, [memory: 128, case: 2], "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/upload-128"},
+      {:ibm, [memory: 256, case: 2], "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/upload-256"},
+      {:ibm, [memory: 512, case: 2], "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/upload-512"},
+      {:ibm, [memory: 128, case: 2], "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/download-128"},
+      {:ibm, [memory: 256, case: 2], "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/download-256"},
+      {:ibm, [memory: 512, case: 2], "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/download-512"}
     ]
     backends
     |> Enum.map(
