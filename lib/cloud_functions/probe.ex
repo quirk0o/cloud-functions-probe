@@ -89,13 +89,41 @@ defmodule CloudFunctions.Probe do
       },
       {:aws, [memory: 1536], "https://bv4odbjim8.execute-api.eu-west-1.amazonaws.com/dev/hello-1536"},
       {:azure, [], "http://cloud-functions-research.azurewebsites.net/api/hello"},
-      {:spotinst, [memory: 128, subprovider: :aws], "https://app-eb0025f2-serverless-research-dev-execute-function1.spotinst.io/fx-bd40b9b2"},
-      {:spotinst, [memory: 256, subprovider: :aws], "https://app-eb0025f2-serverless-research-dev-execute-function1.spotinst.io/fx-ea136e11"},
-      {:spotinst, [memory: 512, subprovider: :aws], "https://app-eb0025f2-serverless-research-dev-execute-function1.spotinst.io/fx-a42b9748"},
-      {:spotinst, [memory: 1024, subprovider: :aws], "https://app-eb0025f2-serverless-research-dev-execute-function1.spotinst.io/fx-3cca7795"},
-      {:spotinst, [memory: 1536, subprovider: :aws], "https://app-eb0025f2-serverless-research-dev-execute-function1.spotinst.io/fx-623b98f7"},
-      {:spotinst, [memory: 2048, subprovider: :aws], "https://app-eb0025f2-serverless-research-dev-execute-function1.spotinst.io/fx-85ddb2ba"},
-      {:spotinst, [memory: 2496, subprovider: :aws], "https://app-eb0025f2-serverless-research-dev-execute-function1.spotinst.io/fx-147f0141"}
+      {
+        :spotinst,
+        [memory: 128, subprovider: :aws],
+        "https://app-eb0025f2-serverless-research-dev-execute-function1.spotinst.io/fx-bd40b9b2"
+      },
+      {
+        :spotinst,
+        [memory: 256, subprovider: :aws],
+        "https://app-eb0025f2-serverless-research-dev-execute-function1.spotinst.io/fx-ea136e11"
+      },
+      {
+        :spotinst,
+        [memory: 512, subprovider: :aws],
+        "https://app-eb0025f2-serverless-research-dev-execute-function1.spotinst.io/fx-a42b9748"
+      },
+      {
+        :spotinst,
+        [memory: 1024, subprovider: :aws],
+        "https://app-eb0025f2-serverless-research-dev-execute-function1.spotinst.io/fx-3cca7795"
+      },
+      {
+        :spotinst,
+        [memory: 1536, subprovider: :aws],
+        "https://app-eb0025f2-serverless-research-dev-execute-function1.spotinst.io/fx-623b98f7"
+      },
+      {
+        :spotinst,
+        [memory: 2048, subprovider: :aws],
+        "https://app-eb0025f2-serverless-research-dev-execute-function1.spotinst.io/fx-85ddb2ba"
+      },
+      {
+        :spotinst,
+        [memory: 2496, subprovider: :aws],
+        "https://app-eb0025f2-serverless-research-dev-execute-function1.spotinst.io/fx-147f0141"
+      }
     ]
 
     backends
@@ -191,9 +219,11 @@ defmodule CloudFunctions.Probe do
                                     |> Enum.join(",")
                        ~s|experiment,#{tags_str} #{values_str}|
                        |> InfluxClient.write()
+                     _ -> Logger.warn("Invalid response: #{inspect(result.body)}")
+
                    end
                  else
-                   Logger.warn("Invalid response: #{result.body}")
+                   Logger.warn("Invalid response: #{inspect(result.body)}")
                  end
                rescue
                  e in Tesla.Error ->
