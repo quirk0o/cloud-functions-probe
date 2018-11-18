@@ -242,7 +242,8 @@ defmodule CloudFunctions.Probe do
         [memory: 2048, case: 2],
         "https://us-central1-serverless-research-199315.cloudfunctions.net/transfer-2048"
       },
-      {:azure, [case: 2], "https://serverless-research-azure.azurewebsites.net/api/transfer"},
+      {:azure, [case: 2], "https://serverless-research-v2-download.azurewebsites.net/api/download"},
+      {:azure, [case: 2], "https://serverless-research-v2-upload.azurewebsites.net/api/upload"},
       {
         :ibm,
         [memory: 128, case: 2],
