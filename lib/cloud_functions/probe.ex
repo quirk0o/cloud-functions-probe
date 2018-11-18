@@ -243,16 +243,51 @@ defmodule CloudFunctions.Probe do
         "https://us-central1-serverless-research-199315.cloudfunctions.net/transfer-2048"
       },
       {:azure, [case: 2], "https://serverless-research-azure.azurewebsites.net/api/transfer"},
-      {:ibm, [memory: 128, case: 2], "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/upload-128"},
-      {:ibm, [memory: 256, case: 2], "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/upload-256"},
-      {:ibm, [memory: 512, case: 2], "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/upload-512"},
-      {:ibm, [memory: 128, case: 2], "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/download-128"},
-      {:ibm, [memory: 256, case: 2], "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/download-256"},
-      {:ibm, [memory: 512, case: 2], "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/download-512"}
+      {
+        :ibm,
+        [memory: 128, case: 2],
+        "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/upload-128"
+      },
+      {
+        :ibm,
+        [memory: 256, case: 2],
+        "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/upload-256"
+      },
+      {
+        :ibm,
+        [memory: 512, case: 2],
+        "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/upload-512"
+      },
+      {
+        :ibm,
+        [memory: 128, case: 2],
+        "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/download-128"
+      },
+      {
+        :ibm,
+        [memory: 256, case: 2],
+        "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/download-256"
+      },
+      {
+        :ibm,
+        [memory: 512, case: 2],
+        "https://service.us.apiconnect.ibmcloud.com/gws/apigateway/api/79fcf6ebf02e88f3cfac59ae37ec551b193961b2b82d1e0bbce94f6c69323150/serverless-research-transfer/download-512"
+      }
     ]
     backends
     |> Enum.map(
          fn {provider, tags, url} ->
+           tags_str = tags
+                      |> Keyword.put(:provider, provider)
+                      |> Enum.reject(fn {k, v} -> is_nil(v) end)
+                      |> Enum.map(
+                           fn
+                             {k, v} when is_binary(v) -> "#{k}=\"#{v}\""
+                             {k, v} -> "#{k}=#{v}"
+                           end
+                         )
+                      |> Enum.join(",")
+
            Task.Supervisor.async_nolink(
              :requests,
              fn ->
@@ -260,30 +295,6 @@ defmodule CloudFunctions.Probe do
                  Logger.info("Trying #{provider} #{inspect(tags)} #{url}")
                  parsed = URI.parse(url)
                  root_uri = %{parsed | path: ""}
-
-                 Client.get(
-                   root_uri
-                   |> to_string(),
-                   opts: [
-                     timeout: 120_000_000,
-                     connect_timeout: 30_000_000,
-                     recv_timeout: 120_000_000
-                   ]
-                 )
-
-                 {latency, _result} = :timer.tc(
-                   fn ->
-                     Client.get(
-                       root_uri
-                       |> to_string(),
-                       opts: [
-                         timeout: 120_000_000,
-                         connect_timeout: 30_000_000,
-                         recv_timeout: 120_000_000
-                       ]
-                     )
-                   end
-                 )
 
                  {time, result} = :timer.tc(
                    fn ->
@@ -300,19 +311,13 @@ defmodule CloudFunctions.Probe do
                  )
 
                  time_s = time / 1_000_000
-                 latency_s = latency / 1_000_000
 
                  if is_map(result.body) do
-                   tags_str = tags
-                              |> Keyword.put(:provider, provider)
-                              |> Enum.reject(fn {k, v} -> is_nil(v) end)
-                              |> Enum.map(
-                                   fn
-                                     {k, v} when is_binary(v) -> "#{k}=\"#{v}\""
-                                     {k, v} -> "#{k}=#{v}"
-                                   end
-                                 )
-                              |> Enum.join(",")
+                   error = result.body["error"] ||
+                     get_in(result.body, ["download", "error"]) ||
+                     get_in(result.body, ["download", "error"])
+                   status = if is_nil(error), do: 0, else: 1
+
                    time_download = case get_in(result.body, ["time", "download"]) do
                      nil ->
                        Logger.warn("No download time")
@@ -327,7 +332,7 @@ defmodule CloudFunctions.Probe do
                      [time_internal_s, time_internal_ns] -> time_internal_s + time_internal_ns / 1_000_000_000
                    end
 
-                   values_str = [download: time_download, upload: time_upload]
+                   values_str = [download: time_download, upload: time_upload, status: status, error: error]
                                 |> Enum.reject(fn {k, v} -> is_nil(v) end)
                                 |> Enum.map(
                                      fn
