@@ -316,7 +316,7 @@ defmodule CloudFunctions.Probe do
                  if is_map(result.body) do
                    error = result.body["error"] ||
                      get_in(result.body, ["download", "error"]) ||
-                     get_in(result.body, ["download", "error"])
+                     get_in(result.body, ["upload", "error"])
                    status = if is_nil(error), do: 0, else: 1
 
                    time_download = case get_in(result.body, ["time", "download"]) do
