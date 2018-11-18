@@ -350,6 +350,16 @@ defmodule CloudFunctions.Probe do
                rescue
                  e in Tesla.Error ->
                    Logger.error("Error: #{inspect(e)}")
+                   values_str = [status: 1, error: inspect(e)]
+                                |> Enum.map(
+                                     fn
+                                       {k, v} when is_binary(v) -> "#{k}=\"#{v}\""
+                                       {k, v} -> "#{k}=#{v}"
+                                     end
+                                   )
+                                |> Enum.join(",")
+                   ~s|transfer,#{tags_str} #{values_str}|
+                   |> InfluxClient.write()
                end
              end
            )
