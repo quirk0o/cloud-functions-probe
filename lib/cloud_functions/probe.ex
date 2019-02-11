@@ -185,11 +185,12 @@ defmodule CloudFunctions.Probe do
                                    String.trim(Map.get(result.body, "cpuModel", "unknown"))
                                    |> String.replace(" ", "\\ ", global: true)
                                  )
+                              |> Keyword.put(:reportedProvider, Map.get(result.body, "provider"))
+                              |> Keyword.put(:reportedLocation, Map.get(result.body, "location"))
                               |> Keyword.put(:provider, provider)
                               |> Enum.reject(fn {k, v} -> is_nil(v) end)
                               |> Enum.map(
                                    fn
-                                     {k, v} when is_binary(v) -> "#{k}=\"#{v}\""
                                      {k, v} -> "#{k}=#{v}"
                                    end
                                  )
@@ -254,6 +255,8 @@ defmodule CloudFunctions.Probe do
       {:aws, [memory: 512, case: 2], "https://gzv6gpwy97.execute-api.us-east-1.amazonaws.com/prod/transfer-512"},
       {:aws, [memory: 1024, case: 2], "https://gzv6gpwy97.execute-api.us-east-1.amazonaws.com/prod/transfer-1024"},
       {:aws, [memory: 1536, case: 2], "https://gzv6gpwy97.execute-api.us-east-1.amazonaws.com/prod/transfer-1536"},
+      {:aws, [memory: 2048, case: 2], "https://gzv6gpwy97.execute-api.us-east-1.amazonaws.com/prod/transfer-2048"},
+      {:aws, [memory: 3008, case: 2], "https://gzv6gpwy97.execute-api.us-east-1.amazonaws.com/prod/transfer-3008"},
       {
         :google,
         [memory: 128, case: 2],
