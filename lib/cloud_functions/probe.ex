@@ -30,7 +30,8 @@ defmodule CloudFunctions.Probe do
     [
       fn -> probe_load()     end,
       fn -> probe_transfer() end,
-      fn -> probe_transfer_overhead() end
+      fn -> probe_transfer_overhead() end,
+      fn -> probe_latency() end
     ]
     |> Enum.map(&Task.async/1)
     |> Enum.map(fn t -> Task.await(t, 600_000) end)
@@ -400,6 +401,114 @@ defmodule CloudFunctions.Probe do
                                 |> Enum.join(",")
                    ~s|transfer,#{tags_str} #{values_str}|
                    |> InfluxClient.write()
+               end
+             end
+           )
+           |> Task.await(120000)
+         end
+       )
+  end
+
+  def probe_latency() do
+    backends = [
+      {:aws, [memory: 128], "https://gzv6gpwy97.execute-api.us-east-1.amazonaws.com/prod/latency-128"},
+      {:aws, [memory: 256], "https://gzv6gpwy97.execute-api.us-east-1.amazonaws.com/prod/latency-256"},
+      {:aws, [memory: 512], "https://gzv6gpwy97.execute-api.us-east-1.amazonaws.com/prod/latency-512"},
+      {:aws, [memory: 1024], "https://gzv6gpwy97.execute-api.us-east-1.amazonaws.com/prod/latency-1024"},
+      {:aws, [memory: 1536], "https://gzv6gpwy97.execute-api.us-east-1.amazonaws.com/prod/latency-1536"},
+      {:aws, [memory: 2048], "https://gzv6gpwy97.execute-api.us-east-1.amazonaws.com/prod/latency-2048"},
+      {:aws, [memory: 3008], "https://gzv6gpwy97.execute-api.us-east-1.amazonaws.com/prod/latency-3008"},
+      {
+        :google,
+        [memory: 128],
+        "https://us-central1-serverless-research-199315.cloudfunctions.net/latency-128"
+      },
+      {
+        :google,
+        [memory: 256],
+        "https://us-central1-serverless-research-199315.cloudfunctions.net/latency-256"
+      },
+      {
+        :google,
+        [memory: 512],
+        "https://us-central1-serverless-research-199315.cloudfunctions.net/latency-512"
+      },
+      {
+        :google,
+        [memory: 1024],
+        "https://us-central1-serverless-research-199315.cloudfunctions.net/latency-1024"
+      },
+      {
+        :google,
+        [memory: 2048],
+        "https://us-central1-serverless-research-199315.cloudfunctions.net/latency-2048"
+      },
+      {:azure, [], "https://serverless-research-v2-latency.azurewebsites.net/api/latency"}
+    ]
+    backends
+    |> Enum.map(
+         fn {provider, tags, url} ->
+           tags_str = tags
+                      |> Keyword.put(:provider, provider)
+                      |> Enum.reject(fn {k, v} -> is_nil(v) end)
+                      |> Enum.map(
+                           fn
+                             {k, v} when is_binary(v) -> "#{k}=\"#{v}\""
+                             {k, v} -> "#{k}=#{v}"
+                           end
+                         )
+                      |> Enum.join(",")
+
+           Task.Supervisor.async_nolink(
+             :requests,
+             fn ->
+               try do
+                 Logger.info("Trying #{provider} #{inspect(tags)} #{url}")
+                 parsed = URI.parse(url)
+                 root_uri = %{parsed | path: ""}
+
+                 {time, result} = :timer.tc(
+                   fn ->
+                     Client.post(
+                       url,
+                       %{},
+                       opts: [
+                         timeout: 120_000_000,
+                         connect_timeout: 30_000_000,
+                         recv_timeout: 120_000_000
+                       ]
+                     )
+                   end
+                 )
+
+                 time_s = time / 1_000_000
+
+                 if is_map(result.body) do
+
+                   time = case get_in(result.body, ["time", "latency"]) do
+                     nil ->
+                       Logger.warn("No time")
+                       nil
+                     [time_internal_s, time_internal_ns] -> time_internal_s + time_internal_ns / 1_000_000_000
+                   end
+
+                   values_str = [latency: time]
+                                |> Enum.reject(fn {k, v} -> is_nil(v) end)
+                                |> Enum.map(
+                                     fn
+                                       {k, v} when is_binary(v) -> "#{k}=\"#{v}\""
+                                       {k, v} -> "#{k}=#{v}"
+                                     end
+                                   )
+                                |> Enum.join(",")
+                   ~s|latency,#{tags_str} #{values_str}|
+                   |> InfluxClient.write()
+                 else
+                   Logger.warn("Invalid response: #{result.body}")
+                 end
+               rescue
+                 e in Tesla.Error ->
+                   Logger.error("Error: #{inspect(e)}")
                end
              end
            )
